@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from typing import Any
 
@@ -30,6 +31,7 @@ Rules:
 - If no photo is usable or nothing is visible, return "from_photos": [] and a short summary_ko explaining that.
 - estimated_volume_m3 must be realistic orders of magnitude (e.g. small chair ~0.05, wardrobe ~1.5, fridge ~0.6).
 - Do not duplicate the same object unless clearly multiple instances.
+- After this block you receive USER_CONTEXT (JSON) and optionally USER_PROMPT (free text). Follow explicit user instructions when listing items or volumes if they are reasonable and still valid JSON output.
 """
 
 
@@ -101,8 +103,17 @@ def run_move_inventory(
     user_context: str,
     timeout: float,
 ) -> str:
-    ctx = (user_context or "").strip()[:8000]
-    content = MOVE_INVENTORY_PROMPT + "\n\nUSER_CONTEXT (structured notes from user, may be empty):\n" + ctx
+    try:
+        cap = int(os.environ.get("MOVE_VLM_CONTEXT_CHARS", "16000"))
+    except ValueError:
+        cap = 16000
+    cap = max(2000, min(cap, 100000))
+    ctx = (user_context or "").strip()[:cap]
+    content = (
+        MOVE_INVENTORY_PROMPT
+        + "\n\nUSER_CONTEXT (JSON + optional USER_PROMPT section below):\n"
+        + ctx
+    )
     client = Client(host=host, timeout=timeout)
     try:
         response = client.chat(
@@ -114,7 +125,10 @@ def run_move_inventory(
                     "images": images_png if images_png else [],
                 }
             ],
-            options={"temperature": 0.25, "num_ctx": 8192},
+            options={
+                "temperature": 0.25,
+                "num_ctx": int(os.environ.get("MOVE_NUM_CTX", "16384")),
+            },
             stream=False,
         )
     except ResponseError as e:

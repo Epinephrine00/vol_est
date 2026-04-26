@@ -21,7 +21,12 @@ load_dotenv()
 app = Flask(__name__)
 app.register_blueprint(move_bp)
 
-MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+# 단일 이미지(/api/analyze)와 다중 이미지(/move) 모두 이 한도를 공유합니다.
+_max_single = int(os.environ.get("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+_move_bulk = int(
+    os.environ.get("MOVE_MAX_UPLOAD_BYTES", str(120 * 1024 * 1024))
+)
+MAX_UPLOAD_BYTES = max(_max_single, _move_bulk)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").strip()
@@ -159,7 +164,17 @@ def analyze():
 
 @app.errorhandler(413)
 def too_large(_e):
-    return jsonify({"error": "File too large."}), 413
+    cap = app.config.get("MAX_CONTENT_LENGTH")
+    return (
+        jsonify(
+            {
+                "error": "Request body too large (413).",
+                "hint": "Increase MAX_UPLOAD_BYTES and/or MOVE_MAX_UPLOAD_BYTES in .env (Flask MAX_CONTENT_LENGTH).",
+                "max_content_length": cap,
+            }
+        ),
+        413,
+    )
 
 
 if __name__ == "__main__":

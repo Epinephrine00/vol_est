@@ -7,9 +7,10 @@ import json
 import os
 from typing import Any
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, Response, jsonify, render_template, request
 
 from image_prep import prepare_image
+from move_pdf import build_estimate_pdf, pdf_attachment_headers
 from move_vlm import parse_inventory, run_move_inventory
 
 move_bp = Blueprint("move", __name__, url_prefix="/move")
@@ -166,7 +167,7 @@ def move_estimate_api():
     files = request.files.getlist("images")
     images_png: list[bytes] = []
     thumbs_b64: list[str] = []
-    max_images = int(os.environ.get("MOVE_MAX_IMAGES", "6"))
+    max_images = int(os.environ.get("MOVE_MAX_IMAGES", "30"))
 
     allowed = frozenset(
         {"image/jpeg", "image/png", "image/webp", "image/jpg", "image/pjpeg"}
@@ -189,13 +190,23 @@ def move_estimate_api():
 
     manual_items = _normalize_manual_items(extra.get("items"))
 
+    user_prompt = (request.form.get("user_prompt") or "").strip()
+    json_ctx = json.dumps(extra, ensure_ascii=False, indent=2) if extra else "{}"
+    if user_prompt:
+        vlm_ctx = (
+            json_ctx
+            + "\n\n---\nUSER_PROMPT (natural language):\n"
+            + user_prompt
+        )
+    else:
+        vlm_ctx = json_ctx
+
     vlm_block: dict[str, Any] | None = None
     vlm_raw = ""
     if images_png:
         try:
-            ctx = json.dumps(extra, ensure_ascii=False, indent=2) if extra else "{}"
             vlm_raw = run_move_inventory(
-                ollama_host, model, images_png, ctx, timeout
+                ollama_host, model, images_png, vlm_ctx, timeout
             )
             vlm_block = parse_inventory(vlm_raw)
         except RuntimeError as e:
@@ -222,6 +233,7 @@ def move_estimate_api():
 
     doc = {
         "title": "이사 견적(초안)",
+        "user_prompt_sent": user_prompt,
         "generated_for": {
             "customer_name": extra.get("customer_name", ""),
             "move_date": extra.get("move_date", ""),
@@ -238,4 +250,14 @@ def move_estimate_api():
         "previews_base64": thumbs_b64,
         "model_used": model,
     }
+    out_fmt = (
+        request.form.get("output") or request.args.get("output") or "json"
+    ).strip().lower()
+    if out_fmt == "pdf":
+        pdf_bytes = build_estimate_pdf(doc)
+        return Response(
+            pdf_bytes,
+            mimetype="application/pdf",
+            headers=pdf_attachment_headers(),
+        )
     return jsonify(doc)
