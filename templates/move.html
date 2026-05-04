@@ -31,8 +31,7 @@
           <div class="card-body">
             <h1 class="h4 card-title">입력</h1>
             <p class="small text-muted">
-              <code>data/anon_*</code>처럼 한 폴더에 <code>photo_*.jpg</code> 다수 + 견적서 PDF가 나오는 흐름을 지원합니다.
-              VLM은 사진으로 짐을 추정하고, JSON으로 부피·층·거리 등을 덧붙일 수 있습니다.
+              방 사진을 기반으로 짐을 인식해 견적을 생성합니다. 견적 보조 데이터가 있으면 이미지 인식 결과를 보완하는 후보 자료로 함께 사용합니다.
             </p>
             <form id="estForm" class="vstack gap-3" onsubmit="event.preventDefault(); return false;">
               <div>
@@ -42,57 +41,42 @@
                 <input class="form-control mt-1" type="file" id="folderImages" accept="image/jpeg,image/png,image/webp" multiple webkitdirectory>
               </div>
               <div>
-                <label class="form-label">모델</label>
-                <input class="form-control" type="text" id="model" value="{{ default_model }}" autocomplete="off">
-              </div>
-              <div>
                 <label class="form-label">VLM용 자연어 프롬프트 (선택)</label>
                 <textarea class="form-control" id="userPrompt" rows="4" spellcheck="true"
                   placeholder="예: 침대는 퀸 사이즈로 가정해줘. 책은 무시하고 가구만 적어줘."></textarea>
-                <div class="form-text">
-                  사진이 있을 때만 VLM에 붙습니다. 아래 JSON은 주소·부피·<code>items</code> 같은 <strong>구조화 데이터</strong>용이고,
-                  긴 지시문은 이 칸에 두는 편이 JSON을 깨끗하게 유지하기 좋습니다.
-                  JSON 안에만 넣어도 됩니다(전체가 문맥으로 전달됨).
-                </div>
               </div>
               <div>
-                <label class="form-label">추가 데이터 <code>extra_data</code> (JSON)</label>
-                <textarea class="form-control code" id="extraData" rows="14" spellcheck="false">{
-  "customer_name": "",
-  "move_date": "",
-  "origin_address": "",
-  "dest_address": "",
-  "distance_km": 0,
-  "origin_floor": 1,
-  "dest_floor": 1,
-  "elevator_origin": true,
-  "elevator_dest": true,
-  "special_notes": "",
-  "items": [
-    { "name": "예: 책장", "volume_m3": 0.4, "qty": 1, "fragile": false, "room_hint": "서재" }
-  ]
-}</textarea>
-                <div class="form-text"><code>items</code> 는 사용자가 아는 부피(㎥)·수량을 넣습니다. 사진과 겹치면 사용자 항목이 먼저 표에 나옵니다.</div>
+                <label class="form-label">견적 보조 데이터 (선택)</label>
+                <div class="border rounded p-3 bg-light">
+                  <p class="small text-muted mb-3">
+                    <code>quote.csv</code>를 넣으면 이미지 인식 결과에 대한 후보 자료로 사용합니다.
+                    VLM이 사진에서 확인되는 품목만 반영하고, 없는 물건은 제외합니다.
+                  </p>
+                  <div class="mb-3">
+                    <label class="form-label">quote.csv</label>
+                    <input class="form-control" type="file" id="rmcQuote" accept="text/csv,.csv">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">summary.json (선택)</label>
+                    <input class="form-control" type="file" id="rmcSummary" accept="application/json,.json">
+                  </div>
+                  <div>
+                    <label class="form-label">viz.json (선택)</label>
+                    <input class="form-control" type="file" id="rmcViz" accept="application/json,.json">
+                  </div>
+                </div>
               </div>
               <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-primary" id="btnGo">
                   <span class="spinner-border spinner-border-sm d-none me-1" id="spin"></span>
                   견적 생성
                 </button>
-                <button type="button" class="btn btn-outline-primary" id="btnPdf">
+                <button type="button" class="btn btn-outline-primary" id="btnPdf" disabled>
                   <span class="spinner-border spinner-border-sm d-none me-1" id="spinPdf"></span>
-                  PDF 견적서
+                  PDF 다운로드
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body small text-muted">
-            <strong>요금·PDF·VLM</strong> 관련 환경 변수:
-            <code>MOVE_BASE_WON</code>, <code>MOVE_PER_M3_WON</code>, <code>MOVE_PER_KM_WON</code>, <code>MOVE_FLOOR_STEP_WON</code>,
-            <code>MOVE_MAX_IMAGES</code>, <code>MOVE_PDF_MAX_THUMBS</code>, <code>MOVE_PDF_FONT_TTF</code>, <code>MOVE_NUM_CTX</code>, <code>MOVE_VLM_CONTEXT_CHARS</code>
-            <br>이미지 최대 변: <strong>{{ max_image_edge }}</strong> px (공통 설정)
           </div>
         </div>
       </div>
@@ -113,11 +97,10 @@
                 <tbody></tbody>
               </table>
             </div>
-            <h3 class="h6">요금 산출 (참고용)</h3>
+            <h3 class="h6">요금 산출</h3>
             <ul class="small list-unstyled" id="feeList"></ul>
             <p class="fw-bold fs-5" id="totalLine"></p>
-            <p class="small mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" id="btnPdfAgain">같은 입력으로 PDF 다운로드</button></p>
-            <p class="small text-danger mb-0">실제 계약 금액이 아닙니다. 업체 문의 후 확정하세요.</p>
+            <p class="small mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" id="btnPdfAgain">PDF 다운로드</button></p>
           </div>
         </div>
         <div id="placeholderHint" class="text-muted small">견적 생성 후 이 영역에 결과가 표시됩니다.</div>

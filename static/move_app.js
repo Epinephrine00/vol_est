@@ -1,12 +1,14 @@
 (function () {
+  var FIXED_MODEL = "gemma4:e2b";
   var images = document.getElementById("images");
   var folderImages = document.getElementById("folderImages");
-  var model = document.getElementById("model");
   var userPrompt = document.getElementById("userPrompt");
-  var extraData = document.getElementById("extraData");
   var btnGo = document.getElementById("btnGo");
   var btnPdf = document.getElementById("btnPdf");
   var btnPdfAgain = document.getElementById("btnPdfAgain");
+  var rmcSummary = document.getElementById("rmcSummary");
+  var rmcViz = document.getElementById("rmcViz");
+  var rmcQuote = document.getElementById("rmcQuote");
   var spin = document.getElementById("spin");
   var spinPdf = document.getElementById("spinPdf");
   var resultCard = document.getElementById("resultCard");
@@ -18,6 +20,7 @@
   var lineTable = document.getElementById("lineTable").querySelector("tbody");
   var feeList = document.getElementById("feeList");
   var totalLine = document.getElementById("totalLine");
+  var lastEstimateDoc = null;
 
   function esc(s) {
     var d = document.createElement("div");
@@ -52,9 +55,9 @@
 
   function buildFormData(output) {
     var fd = new FormData();
-    fd.append("model", (model.value || "").trim());
+    fd.append("model", FIXED_MODEL);
     fd.append("user_prompt", (userPrompt && userPrompt.value) || "");
-    fd.append("extra_data", extraData.value || "{}");
+    fd.append("extra_data", "{}");
     if (output) fd.append("output", output);
     var files = collectImageFiles();
     for (var j = 0; j < files.length; j++) {
@@ -63,27 +66,54 @@
     return fd;
   }
 
+  function buildAssistFormData(output) {
+    if (!rmcQuote.files || !rmcQuote.files[0]) {
+      alert("quote.csv 파일을 선택하세요.");
+      return null;
+    }
+    var fd = new FormData();
+    if (rmcSummary.files && rmcSummary.files[0]) fd.append("summary_json", rmcSummary.files[0]);
+    if (rmcViz.files && rmcViz.files[0]) fd.append("viz_json", rmcViz.files[0]);
+    fd.append("quote_csv", rmcQuote.files[0]);
+    fd.append("mode", "compare");
+    fd.append("model", FIXED_MODEL);
+    fd.append("user_prompt", (userPrompt && userPrompt.value) || "");
+    fd.append("extra_data", "{}");
+    if (output) fd.append("output", output);
+    var files = collectImageFiles();
+    for (var i = 0; i < files.length; i++) {
+      fd.append("images", files[i]);
+    }
+    return fd;
+  }
+
+  function hasAssistQuoteCsv() {
+    return !!(rmcQuote && rmcQuote.files && rmcQuote.files[0]);
+  }
+
   function setLoading(on) {
     btnGo.disabled = on;
-    btnPdf.disabled = on;
+    btnPdf.disabled = on || !lastEstimateDoc;
     spin.classList.toggle("d-none", !on);
   }
 
   function setPdfLoading(on) {
     btnGo.disabled = on;
-    btnPdf.disabled = on;
+    btnPdf.disabled = on || !lastEstimateDoc;
     spinPdf.classList.toggle("d-none", !on);
   }
 
   function renderJson(d) {
     placeholderHint.style.display = "none";
     resultCard.style.display = "block";
-        metaLine.textContent =
-          "모델: " +
-          (d.model_used || "") +
-          (d.user_prompt_sent
-            ? " · 사용자 프롬프트: " + (d.user_prompt_sent.length > 80 ? d.user_prompt_sent.slice(0, 80) + "…" : d.user_prompt_sent)
-            : "");
+    lastEstimateDoc = d;
+    btnPdf.disabled = false;
+    metaLine.textContent =
+      "모델: " +
+      (d.model_used || FIXED_MODEL) +
+      (d.user_prompt_sent
+        ? " · 사용자 프롬프트: " + (d.user_prompt_sent.length > 80 ? d.user_prompt_sent.slice(0, 80) + "…" : d.user_prompt_sent)
+        : "");
 
     thumbs.innerHTML = "";
     (d.previews_base64 || []).forEach(function (b64) {
@@ -113,6 +143,14 @@
       "</dd>";
 
     vlmSummary.textContent = (d.vlm && d.vlm.summary_ko) || "—";
+    if (d.assist_data && d.assist_data.quote_filter) {
+      var f = d.assist_data.quote_filter;
+      var kept = (f.visible_ids || []).length;
+      var excluded = (f.excluded || []).length;
+      vlmSummary.textContent =
+        (f.summary_ko || "견적 보조 데이터 필터링 결과") +
+        " (유지 " + kept + "개 / 제외 " + excluded + "개)";
+    }
 
     lineTable.innerHTML = "";
     (d.lines || []).forEach(function (ln) {
@@ -143,23 +181,19 @@
       (q.volume_m3 != null ? q.volume_m3 : "—") +
       " ㎥ → 부피요금: " +
       (q.volume_fee != null ? q.volume_fee.toLocaleString() : "—") +
-      " 원</li>" +
-      "<li>거리: " +
-      (q.distance_km != null ? q.distance_km : "—") +
-      " km → 거리요금: " +
-      (q.distance_fee != null ? q.distance_fee.toLocaleString() : "—") +
-      " 원</li>" +
-      "<li>층/엘리베이터 추가: " +
-      (q.floor_surcharge != null ? q.floor_surcharge.toLocaleString() : "—") +
       " 원</li>";
     totalLine.textContent =
-      "합계(참고, 세전): " +
+      "총 견적: " +
       (q.total_ex_tax != null ? q.total_ex_tax.toLocaleString() : "—") +
       " 원";
   }
 
-  function fetchPdf(fd) {
-    return fetch("/move/api/estimate", { method: "POST", body: fd }).then(function (r) {
+  function fetchDocPdf(doc) {
+    return fetch("/move/api/pdf_from_doc", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(doc),
+    }).then(function (r) {
       var ct = (r.headers.get("content-type") || "").toLowerCase();
       if (ct.indexOf("application/pdf") !== -1) {
         return r.blob().then(function (blob) {
@@ -186,9 +220,14 @@
   }
 
   btnGo.addEventListener("click", function () {
-    var fd = buildFormData("");
+    var useAssist = hasAssistQuoteCsv();
+    var fd = useAssist ? buildAssistFormData("json") : buildFormData("");
+    if (!fd) return;
+    lastEstimateDoc = null;
+    btnPdf.disabled = true;
+    var endpoint = useAssist ? "/move/api/estimate_from_rmc" : "/move/api/estimate";
     setLoading(true);
-    fetch("/move/api/estimate", { method: "POST", body: fd })
+    fetch(endpoint, { method: "POST", body: fd })
       .then(function (r) {
         return r.json().then(function (j) {
           return { ok: r.ok, body: j };
@@ -209,9 +248,13 @@
       });
   });
 
-  function runPdf(fd) {
+  function downloadCurrentPdf() {
+    if (!lastEstimateDoc) {
+      alert("먼저 견적을 생성하세요.");
+      return;
+    }
     setPdfLoading(true);
-    fetchPdf(fd)
+    fetchDocPdf(lastEstimateDoc)
       .then(function (res) {
         if (!res.ok) {
           alert((res.err && res.err.error) || "PDF 생성 실패");
@@ -228,11 +271,9 @@
       });
   }
 
-  btnPdf.addEventListener("click", function () {
-    runPdf(buildFormData("pdf"));
-  });
+  btnPdf.addEventListener("click", downloadCurrentPdf);
 
   btnPdfAgain.addEventListener("click", function () {
-    runPdf(buildFormData("pdf"));
+    downloadCurrentPdf();
   });
 })();

@@ -128,12 +128,6 @@ def build_estimate_pdf(doc: dict[str, Any]) -> bytes:
     )
 
     story.append(_p(doc.get("title") or "이사 견적(초안)", title_style))
-    story.append(
-        _p(
-            "본 문서는 참고용 초안이며 실제 계약 금액이 아닙니다.",
-            small,
-        )
-    )
     story.append(Spacer(1, 0.4 * cm))
 
     g = doc.get("generated_for") or {}
@@ -204,7 +198,7 @@ def build_estimate_pdf(doc: dict[str, Any]) -> bytes:
             return f"{int(v):,} 원"
         return "—" if v is None else str(v)
 
-    story.append(_p("요금 산출 (참고)", h2))
+    story.append(_p("요금 산출", h2))
     fee_rows = [
         ["기본료", _won(q.get("base_fee"))],
         ["부피 합계(㎥)", str(q.get("volume_m3", "—"))],
@@ -212,7 +206,7 @@ def build_estimate_pdf(doc: dict[str, Any]) -> bytes:
         ["거리(km)", str(q.get("distance_km", "—"))],
         ["거리요금", _won(q.get("distance_fee"))],
         ["층/엘리베이터 추가", _won(q.get("floor_surcharge"))],
-        ["합계(세전)", _won(q.get("total_ex_tax"))],
+        ["총 견적", _won(q.get("total_ex_tax"))],
     ]
     t_fee = Table(fee_rows, colWidths=[5 * cm, 10 * cm])
     t_fee.setStyle(
