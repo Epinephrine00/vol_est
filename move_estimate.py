@@ -7,6 +7,7 @@ import csv
 import io
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 from flask import Blueprint, Response, jsonify, render_template, request
@@ -16,6 +17,15 @@ from move_vlm import parse_inventory, parse_quote_filter, run_move_inventory, ru
 
 move_bp = Blueprint("move", __name__, url_prefix="/move")
 FIXED_MOVE_MODEL = "gemma4:e2b"
+
+
+class MoveEstimateError(RuntimeError):
+    """Structured error for non-Flask batch callers."""
+
+    def __init__(self, payload: dict[str, Any], status_code: int):
+        super().__init__(str(payload.get("error", payload)))
+        self.payload = payload
+        self.status_code = status_code
 
 
 def _env_float(key: str, default: float) -> float:
@@ -180,6 +190,28 @@ def _prepare_uploaded_images() -> tuple[list[bytes], list[str], Any]:
     return images_png, thumbs_b64, None
 
 
+def _prepare_image_paths(
+    image_paths: list[str | os.PathLike[str]],
+) -> tuple[list[bytes], list[str]]:
+    max_edge = int(os.environ.get("MAX_IMAGE_EDGE", "1280"))
+    images_png: list[bytes] = []
+    thumbs_b64: list[str] = []
+    max_images = int(os.environ.get("MOVE_MAX_IMAGES", "30"))
+    for raw_path in image_paths[:max_images]:
+        path = Path(raw_path)
+        try:
+            raw = path.read_bytes()
+            png, _iw, _ih = prepare_image(raw, max_edge)
+        except Exception as e:
+            raise MoveEstimateError(
+                {"error": f"Could not read image {str(path)!r}: {e}"},
+                400,
+            ) from e
+        images_png.append(png)
+        thumbs_b64.append(base64.b64encode(png).decode("ascii"))
+    return images_png, thumbs_b64
+
+
 def _run_optional_move_vlm(
     images_png: list[bytes],
     extra: dict[str, Any],
@@ -219,6 +251,45 @@ def _run_optional_move_vlm(
             ),
             422,
         )
+
+
+def _run_optional_move_vlm_or_raise(
+    images_png: list[bytes],
+    extra: dict[str, Any],
+    user_prompt: str,
+    model: str,
+) -> dict[str, Any]:
+    if user_prompt:
+        vlm_ctx = (
+            json.dumps(extra, ensure_ascii=False, indent=2)
+            + "\n\n---\nUSER_PROMPT (natural language):\n"
+            + user_prompt
+        )
+    else:
+        vlm_ctx = json.dumps(extra, ensure_ascii=False, indent=2) if extra else "{}"
+
+    if not images_png:
+        return {
+            "from_photos": [],
+            "summary_ko": "사진이 없어 VLM 분석을 건너뛰었습니다. 아래 항목은 사용자 입력만 반영됩니다.",
+        }
+
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").strip()
+    timeout = float(os.environ.get("OLLAMA_TIMEOUT", "180"))
+    vlm_raw = ""
+    try:
+        vlm_raw = run_move_inventory(ollama_host, model, images_png, vlm_ctx, timeout)
+        return parse_inventory(vlm_raw)
+    except RuntimeError as e:
+        raise MoveEstimateError({"error": str(e)}, 502) from e
+    except (json.JSONDecodeError, ValueError) as e:
+        raise MoveEstimateError(
+            {
+                "error": f"VLM output parse failed: {e}",
+                "raw_excerpt": vlm_raw[:1200],
+            },
+            422,
+        ) from e
 
 
 def _read_json_upload(field_name: str, required: bool = False) -> tuple[dict[str, Any] | None, Any]:
@@ -288,6 +359,10 @@ def _parse_rmc_quote_csv() -> dict[str, Any] | None:
         raw = upload.read().decode("utf-8-sig")
     else:
         raw = request.form.get("quote_csv", "")
+    return parse_rmc_quote_csv_text(raw)
+
+
+def parse_rmc_quote_csv_text(raw: str) -> dict[str, Any] | None:
     if not raw.strip():
         return None
 
@@ -432,6 +507,80 @@ def _filter_quote_items_with_vlm(
     return kept, filt, None
 
 
+def _filter_quote_items_with_vlm_or_raise(
+    quote_items: list[dict[str, Any]],
+    images_png: list[bytes],
+    extra: dict[str, Any],
+    user_prompt: str,
+    model: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if not quote_items:
+        return [], {
+            "visible_ids": [],
+            "excluded": [],
+            "summary_ko": "quote.csv에 필터링할 품목이 없습니다.",
+            "filter_applied": False,
+        }
+    if not images_png:
+        return quote_items, {
+            "visible_ids": [str(item["id"]) for item in quote_items],
+            "excluded": [],
+            "summary_ko": "사진이 없어 quote.csv 품목을 그대로 사용했습니다.",
+            "filter_applied": False,
+        }
+
+    context = {
+        "quote_candidates": [
+            {
+                "id": str(item["id"]),
+                "name": item["name"],
+                "estimated_volume_m3": item["estimated_volume_m3"],
+                "quote_subtotal": item.get("quote_subtotal"),
+                "note": item.get("quote_note"),
+            }
+            for item in quote_items
+        ],
+        "move_context": extra,
+    }
+    if user_prompt:
+        context["user_prompt"] = user_prompt
+
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").strip()
+    timeout = float(os.environ.get("OLLAMA_TIMEOUT", "180"))
+    raw = ""
+    try:
+        raw = run_quote_filter(
+            ollama_host,
+            model,
+            images_png,
+            json.dumps(context, ensure_ascii=False, indent=2),
+            timeout,
+        )
+        candidate_ids = {str(item["id"]) for item in quote_items}
+        filt = parse_quote_filter(raw, candidate_ids)
+    except RuntimeError as e:
+        raise MoveEstimateError({"error": str(e)}, 502) from e
+    except (json.JSONDecodeError, ValueError) as e:
+        raise MoveEstimateError(
+            {
+                "error": f"VLM quote filter output parse failed: {e}",
+                "raw_excerpt": raw[:1200],
+            },
+            422,
+        ) from e
+
+    visible = set(filt["visible_ids"])
+    kept = [dict(item, source="quote_csv_visible") for item in quote_items if str(item["id"]) in visible]
+    excluded_ids = {str(item["id"]) for item in quote_items if str(item["id"]) not in visible}
+    known_excluded = {str(item.get("id")) for item in filt.get("excluded", [])}
+    for item_id in sorted(excluded_ids - known_excluded):
+        filt.setdefault("excluded", []).append(
+            {"id": item_id, "reason_ko": "사진에서 명확히 확인되지 않음"}
+        )
+    filt["filter_applied"] = True
+    return kept, filt
+
+
 def _coerce_float(value: Any) -> float | None:
     try:
         return float(value)
@@ -494,6 +643,189 @@ def _build_doc(
     }
 
 
+def build_move_estimate_doc(
+    images_png: list[bytes],
+    thumbs_b64: list[str],
+    extra: dict[str, Any] | None = None,
+    user_prompt: str = "",
+    model: str = FIXED_MOVE_MODEL,
+) -> dict[str, Any]:
+    extra = extra or {}
+    manual_items = _normalize_manual_items(extra.get("items"))
+    vlm_block = _run_optional_move_vlm_or_raise(
+        images_png,
+        extra,
+        user_prompt.strip(),
+        model,
+    )
+    photo_items = vlm_block["from_photos"]
+    merged = _merge_lines(photo_items, manual_items)
+    quote = _compute_quote(merged, extra)
+    return _build_doc(
+        "이사 견적(초안)",
+        user_prompt.strip(),
+        extra,
+        vlm_block,
+        merged,
+        quote,
+        thumbs_b64,
+        model,
+    )
+
+
+def estimate_move_from_files(
+    image_paths: list[str | os.PathLike[str]],
+    extra: dict[str, Any] | None = None,
+    user_prompt: str = "",
+    model: str = FIXED_MOVE_MODEL,
+) -> dict[str, Any]:
+    images_png, thumbs_b64 = _prepare_image_paths(image_paths)
+    return build_move_estimate_doc(
+        images_png,
+        thumbs_b64,
+        extra=extra,
+        user_prompt=user_prompt,
+        model=model,
+    )
+
+
+def build_move_estimate_from_rmc_doc(
+    images_png: list[bytes],
+    thumbs_b64: list[str],
+    quote_csv: dict[str, Any] | None,
+    extra: dict[str, Any] | None = None,
+    summary: dict[str, Any] | None = None,
+    viz: dict[str, Any] | None = None,
+    user_prompt: str = "",
+    model: str = FIXED_MOVE_MODEL,
+    mode: str = "compare",
+) -> dict[str, Any]:
+    mode = mode.strip().lower()
+    if mode not in {"compare", "merge"}:
+        raise MoveEstimateError({"error": "mode must be `compare` or `merge`."}, 400)
+
+    extra = extra or {}
+    summary = summary or {}
+    if not quote_csv:
+        raise MoveEstimateError({"error": "Missing required `quote_csv`."}, 400)
+    quote_items = _items_from_quote_csv(quote_csv)
+    if not quote_items:
+        raise MoveEstimateError(
+            {"error": "`quote_csv` does not contain any billable line items."},
+            400,
+        )
+
+    manual_items = _normalize_manual_items(extra.get("items"))
+    summary_items = _items_from_rmc_summary(summary)
+    viz_summary = _summarize_rmc_viz(viz)
+    user_prompt = user_prompt.strip()
+
+    context_extra = dict(extra)
+    context_extra["estimate_assist_data"] = {
+        "quote_candidates": [
+            {
+                "id": str(item["id"]),
+                "name": item["name"],
+                "estimated_volume_m3": item["estimated_volume_m3"],
+                "quote_subtotal": item.get("quote_subtotal"),
+                "note": item.get("quote_note"),
+            }
+            for item in quote_items
+        ],
+        "summary": {
+            "input": summary.get("input"),
+            "n_points": summary.get("n_points"),
+            "n_instances": summary.get("n_instances"),
+            "quote": summary.get("quote"),
+        },
+    }
+    vlm_block = _run_optional_move_vlm_or_raise(
+        images_png,
+        context_extra,
+        user_prompt,
+        model,
+    )
+    visible_quote_items, quote_filter = _filter_quote_items_with_vlm_or_raise(
+        quote_items,
+        images_png,
+        extra,
+        user_prompt,
+        model,
+    )
+
+    photo_items = vlm_block["from_photos"]
+    base_items = visible_quote_items if quote_items else summary_items
+    lines = _merge_lines(photo_items, base_items + manual_items)
+    quote = _compute_quote(lines, extra)
+    if quote_filter.get("summary_ko"):
+        vlm_summary = vlm_block.get("summary_ko", "")
+        vlm_block["summary_ko"] = (
+            f"{vlm_summary} / 보조 데이터 필터링: {quote_filter['summary_ko']}"
+            if vlm_summary else quote_filter["summary_ko"]
+        )
+
+    doc = _build_doc(
+        "견적 보조 데이터 기반 이사 견적",
+        user_prompt,
+        extra,
+        vlm_block,
+        lines,
+        quote,
+        thumbs_b64,
+        model,
+    )
+    doc["integration"] = {
+        "source": "estimate_assist_data",
+        "mode": mode,
+        "pricing_policy": (
+            "quote.csv is the primary candidate list; VLM keeps only candidates "
+            "that are visible in the uploaded photos before vol_est recomputes the total."
+        ),
+    }
+    doc["assist_data"] = {
+        "input": summary.get("input"),
+        "n_points": summary.get("n_points"),
+        "n_instances": summary.get("n_instances"),
+        "summary_quote": summary.get("quote"),
+        "quote_csv": quote_csv,
+        "quote_filter": quote_filter,
+        "visualization": viz_summary,
+    }
+    return doc
+
+
+def estimate_move_from_rmc_files(
+    image_paths: list[str | os.PathLike[str]],
+    quote_csv_path: str | os.PathLike[str],
+    extra: dict[str, Any] | None = None,
+    summary: dict[str, Any] | None = None,
+    viz: dict[str, Any] | None = None,
+    user_prompt: str = "",
+    model: str = FIXED_MOVE_MODEL,
+    mode: str = "compare",
+) -> dict[str, Any]:
+    try:
+        quote_csv_text = Path(quote_csv_path).read_text(encoding="utf-8-sig")
+    except Exception as e:
+        raise MoveEstimateError(
+            {"error": f"Could not read quote_csv {str(quote_csv_path)!r}: {e}"},
+            400,
+        ) from e
+    quote_csv = parse_rmc_quote_csv_text(quote_csv_text)
+    images_png, thumbs_b64 = _prepare_image_paths(image_paths)
+    return build_move_estimate_from_rmc_doc(
+        images_png,
+        thumbs_b64,
+        quote_csv,
+        extra=extra,
+        summary=summary,
+        viz=viz,
+        user_prompt=user_prompt,
+        model=model,
+        mode=mode,
+    )
+
+
 def _pdf_response(doc: dict[str, Any]):
     try:
         from move_pdf import build_estimate_pdf, pdf_attachment_headers
@@ -528,8 +860,6 @@ def move_index():
 
 @move_bp.post("/api/estimate")
 def move_estimate_api():
-    model = FIXED_MOVE_MODEL
-
     extra, err = _parse_extra_form()
     if err:
         return err
@@ -539,19 +869,18 @@ def move_estimate_api():
     if err:
         return err
 
-    manual_items = _normalize_manual_items(extra.get("items"))
     user_prompt = (request.form.get("user_prompt") or "").strip()
-    vlm_block, err = _run_optional_move_vlm(images_png, extra, user_prompt, model)
-    if err:
-        return err
-    assert vlm_block is not None
+    try:
+        doc = build_move_estimate_doc(
+            images_png,
+            thumbs_b64,
+            extra=extra,
+            user_prompt=user_prompt,
+            model=FIXED_MOVE_MODEL,
+        )
+    except MoveEstimateError as e:
+        return jsonify(e.payload), e.status_code
 
-    photo_items = vlm_block["from_photos"]
-    merged = _merge_lines(photo_items, manual_items)
-    quote = _compute_quote(merged, extra)
-
-    doc = _build_doc("이사 견적(초안)", user_prompt, extra, vlm_block,
-                     merged, quote, thumbs_b64, model)
     out_fmt = (
         request.form.get("output") or request.args.get("output") or "json"
     ).strip().lower()

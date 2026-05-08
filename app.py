@@ -1,4 +1,4 @@
-"""Flask app: VLM 3D extent + 2D projection, volume index / optional calibration."""
+"""림나비스 부피 추정 앱: VLM 3D extent + 2D projection, volume index / optional calibration."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ MAX_UPLOAD_BYTES = max(_max_single, _move_bulk)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").strip()
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llava:7b").strip()
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:e2b").strip()
 MAX_IMAGE_EDGE = int(os.environ.get("MAX_IMAGE_EDGE", "1280"))
 OLLAMA_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "180"))
 
