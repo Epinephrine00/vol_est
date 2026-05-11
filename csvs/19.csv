@@ -1,0 +1,16 @@
+﻿instance_id,label,volume_m3,rate_per_m3,handling_multiplier,min_charge,line_subtotal,currency,note
+0,ceiling,0.5964,0,0.00,0,0,KRW,excluded (non-movable)
+1,book,0.0246,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,book,0.2486,15000,1.00,0,3729,KRW,rate from 'default'
+3,bookshelf,2.2019,36000,1.10,40000,87193,KRW,
+4,book,0.3729,15000,1.00,0,5594,KRW,rate from 'default'
+5,book,0.2962,15000,1.00,0,4444,KRW,rate from 'default'
+6,washing machine,5.8613,55000,1.30,80000,419081,KRW,
+7,washing machine,4.4215,55000,1.30,80000,316136,KRW,
+
+,total_volume_m3,13.4269,,,,,,non-movable items excluded
+,items_subtotal,,,,,836176,KRW,
+,base_labor_fee,,,,,0,KRW,
+,pre_vat,,,,,836176,KRW,
+,VAT,,,,,83618,KRW,
+,TOTAL,,,,,919793,KRW,

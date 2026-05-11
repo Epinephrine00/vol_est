@@ -1,0 +1,221 @@
+﻿instance_id,label,volume_m3,rate_per_m3,handling_multiplier,min_charge,line_subtotal,currency,note
+0,ceiling,0.2084,0,0.00,0,0,KRW,excluded (non-movable)
+1,clothes,0.3897,15000,1.00,0,5846,KRW,rate from 'default'
+2,clothes,0.4617,15000,1.00,0,6926,KRW,rate from 'default'
+3,picture,0.0166,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,radiator,0.0925,0,0.00,0,0,KRW,excluded (non-movable)
+0,ceiling,2.0972,0,0.00,0,0,KRW,excluded (non-movable)
+1,door,0.3490,0,0.00,0,0,KRW,excluded (non-movable)
+2,pillow,0.0188,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,pillow,0.0714,18000,1.00,5000,5000,KRW,
+4,box,0.4825,25000,1.00,8000,12062,KRW,
+5,bed,3.2807,38000,1.10,45000,137134,KRW,
+6,pillow,0.4251,18000,1.00,5000,7652,KRW,
+7,box,0.0536,25000,1.00,8000,8000,KRW,
+8,pillow,0.1921,18000,1.00,5000,5000,KRW,
+9,door,0.1464,0,0.00,0,0,KRW,excluded (non-movable)
+10,clothes,0.0922,15000,1.00,0,1382,KRW,rate from 'default'
+0,pillow,0.1109,18000,1.00,5000,5000,KRW,
+1,pillow,0.0762,18000,1.00,5000,5000,KRW,
+2,curtain,0.2566,18000,1.00,8000,8000,KRW,
+3,shelf,0.9218,32000,1.05,30000,30973,KRW,
+4,bag,0.0306,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,pillow,0.0106,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+6,pillow,0.4384,18000,1.00,5000,7891,KRW,
+7,bed,4.0879,38000,1.10,45000,170874,KRW,
+0,stairs,0.5373,0,0.00,0,0,KRW,excluded (non-movable)
+1,shelf,0.1923,32000,1.05,30000,30000,KRW,
+0,ceiling,0.2939,0,0.00,0,0,KRW,excluded (non-movable)
+1,window,0.1843,0,0.00,0,0,KRW,excluded (non-movable)
+2,book,0.0377,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,cabinet,1.4181,36000,1.10,40000,56155,KRW,
+4,book,0.0882,15000,1.00,0,1323,KRW,rate from 'default'
+5,book,0.0501,15000,1.00,0,752,KRW,rate from 'default'
+6,table,0.2332,40000,1.05,35000,35000,KRW,
+7,bookshelf,1.8860,36000,1.10,40000,74687,KRW,
+8,book,0.0864,15000,1.00,0,1296,KRW,rate from 'default'
+9,book,0.1745,15000,1.00,0,2617,KRW,rate from 'default'
+0,ceiling,0.9442,0,0.00,0,0,KRW,excluded (non-movable)
+1,window,0.1567,0,0.00,0,0,KRW,excluded (non-movable)
+2,object,0.0073,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,ceiling light,0.0293,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,bed,1.5453,38000,1.10,45000,64593,KRW,
+5,couch,3.1291,42000,1.15,55000,151138,KRW,
+6,window,0.5008,0,0.00,0,0,KRW,excluded (non-movable)
+7,pillow,0.0188,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+8,person,0.0639,15000,1.00,0,959,KRW,rate from 'default'
+9,couch,0.7593,42000,1.15,55000,55000,KRW,
+0,box,0.0435,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,counter,0.3655,15000,1.00,0,5483,KRW,rate from 'default'
+2,shelf,0.0480,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,bed,4.4045,38000,1.10,45000,184110,KRW,
+1,window,1.2842,0,0.00,0,0,KRW,excluded (non-movable)
+0,ceiling,0.2731,0,0.00,0,0,KRW,excluded (non-movable)
+1,picture,7.2423,50000,1.40,10000,506960,KRW,
+2,couch,10.6094,42000,1.15,55000,512435,KRW,
+3,bed,10.1013,38000,1.10,45000,422233,KRW,
+4,shelf,4.6841,32000,1.05,30000,157385,KRW,
+5,box,0.0277,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+6,table,3.9480,40000,1.05,35000,165815,KRW,
+0,bookshelf,0.7973,36000,1.10,40000,40000,KRW,
+1,book,0.1227,15000,1.00,0,1841,KRW,rate from 'default'
+2,door,0.2402,0,0.00,0,0,KRW,excluded (non-movable)
+0,book,0.0129,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,bookshelf,0.7015,36000,1.10,40000,40000,KRW,
+2,bookshelf,0.4226,36000,1.10,40000,40000,KRW,
+3,book,0.0088,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,book,0.1570,15000,1.00,0,2356,KRW,rate from 'default'
+5,book,0.0915,15000,1.00,0,1372,KRW,rate from 'default'
+6,shelf,0.0763,32000,1.05,30000,30000,KRW,
+7,book,0.0215,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+8,alarm clock,0.0053,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,ceiling,0.1819,0,0.00,0,0,KRW,excluded (non-movable)
+1,book,0.0339,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,book,0.0325,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,bookshelf,0.5922,36000,1.10,40000,40000,KRW,
+4,book,0.0077,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,bookshelf,1.1354,36000,1.10,40000,44964,KRW,
+6,bookshelf,0.5376,36000,1.10,40000,40000,KRW,
+7,door,0.3724,0,0.00,0,0,KRW,excluded (non-movable)
+8,book,0.0213,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,ceiling,1.8901,0,0.00,0,0,KRW,excluded (non-movable)
+1,ceiling,2.9440,0,0.00,0,0,KRW,excluded (non-movable)
+2,pillow,0.0490,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,mirror,0.7350,55000,1.60,25000,64676,KRW,
+0,book,0.0269,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,book,0.0211,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,book,0.1096,15000,1.00,0,1644,KRW,rate from 'default'
+3,box,0.1058,25000,1.00,8000,8000,KRW,
+4,bookshelf,0.9858,36000,1.10,40000,40000,KRW,
+5,book,0.0273,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,counter,0.3950,15000,1.00,0,5925,KRW,rate from 'default'
+1,doorframe,0.1311,0,0.00,0,0,KRW,excluded (non-movable)
+0,tv,0.0763,60000,1.30,35000,35000,KRW,
+0,stairs,1.4392,0,0.00,0,0,KRW,excluded (non-movable)
+0,stairs,1.1476,0,0.00,0,0,KRW,excluded (non-movable)
+0,object,0.0246,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,blanket,0.2624,15000,1.00,0,3936,KRW,rate from 'default'
+2,object,0.0787,15000,1.00,0,1181,KRW,rate from 'default'
+3,ottoman,0.0559,15000,1.00,0,838,KRW,rate from 'default'
+4,pillow,0.0167,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,couch,1.4787,42000,1.15,55000,71422,KRW,
+6,object,0.0582,15000,1.00,0,872,KRW,rate from 'default'
+7,coffee table,0.2863,15000,1.00,0,4295,KRW,rate from 'default'
+8,object,0.1280,15000,1.00,0,1919,KRW,rate from 'default'
+0,door,0.0929,0,0.00,0,0,KRW,excluded (non-movable)
+1,doorframe,0.0382,0,0.00,0,0,KRW,excluded (non-movable)
+2,box,0.0260,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,box,0.0586,25000,1.00,8000,8000,KRW,
+4,tube,0.1178,15000,1.00,0,1767,KRW,rate from 'default'
+5,shelf,0.3326,32000,1.05,30000,30000,KRW,
+6,tube,0.0503,15000,1.00,0,754,KRW,rate from 'default'
+7,bag,0.0539,15000,1.00,0,808,KRW,rate from 'default'
+8,tube,0.0245,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,couch,2.1601,42000,1.15,55000,104331,KRW,
+1,shelf,0.5351,32000,1.05,30000,30000,KRW,
+0,shelf,0.0875,32000,1.05,30000,30000,KRW,
+1,bag,0.0309,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,object,0.0143,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,box,0.0885,25000,1.00,8000,8000,KRW,
+4,box,0.0102,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,radiator,0.1428,0,0.00,0,0,KRW,excluded (non-movable)
+6,shelf,0.1966,32000,1.05,30000,30000,KRW,
+0,couch,1.6698,42000,1.15,55000,80652,KRW,
+1,pillow,0.0589,18000,1.00,5000,5000,KRW,
+2,bed,1.6804,38000,1.10,45000,70240,KRW,
+0,ceiling,0.2129,0,0.00,0,0,KRW,excluded (non-movable)
+1,radiator,0.3740,0,0.00,0,0,KRW,excluded (non-movable)
+2,clothes,0.2656,15000,1.00,0,3985,KRW,rate from 'default'
+3,window,1.4665,0,0.00,0,0,KRW,excluded (non-movable)
+4,book,0.2783,15000,1.00,0,4175,KRW,rate from 'default'
+5,clothes,0.0998,15000,1.00,0,1498,KRW,rate from 'default'
+6,clothes,0.5902,15000,1.00,0,8853,KRW,rate from 'default'
+7,shoe,0.0036,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+8,shelf,0.4065,32000,1.05,30000,30000,KRW,
+9,book,0.0656,15000,1.00,0,984,KRW,rate from 'default'
+10,box,0.0543,25000,1.00,8000,8000,KRW,
+11,ladder,1.3012,15000,1.00,0,19519,KRW,rate from 'default'
+0,cabinet,1.9029,36000,1.10,40000,75356,KRW,
+1,object,0.0266,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,window,0.1041,0,0.00,0,0,KRW,excluded (non-movable)
+3,curtain,0.1633,18000,1.00,8000,8000,KRW,
+0,shelf,0.2617,32000,1.05,30000,30000,KRW,
+1,radiator,0.4318,0,0.00,0,0,KRW,excluded (non-movable)
+2,trash can,0.1483,15000,1.00,0,2224,KRW,rate from 'default'
+0,book,0.0888,15000,1.00,0,1333,KRW,rate from 'default'
+1,book,0.0892,15000,1.00,0,1338,KRW,rate from 'default'
+2,book,0.0305,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,book,0.0067,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,book,0.1404,15000,1.00,0,2106,KRW,rate from 'default'
+5,book,0.0781,15000,1.00,0,1171,KRW,rate from 'default'
+6,bookshelf,2.1494,36000,1.10,40000,85114,KRW,
+7,book,0.0400,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+8,book,0.0299,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+9,book,0.1460,15000,1.00,0,2190,KRW,rate from 'default'
+10,book,0.0813,15000,1.00,0,1219,KRW,rate from 'default'
+11,book,0.0199,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,ceiling,0.7815,0,0.00,0,0,KRW,excluded (non-movable)
+1,door,0.3296,0,0.00,0,0,KRW,excluded (non-movable)
+2,door,0.8247,0,0.00,0,0,KRW,excluded (non-movable)
+0,ceiling,0.1145,0,0.00,0,0,KRW,excluded (non-movable)
+1,shelf,0.3110,32000,1.05,30000,30000,KRW,
+0,door,0.4012,0,0.00,0,0,KRW,excluded (non-movable)
+1,door,0.2722,0,0.00,0,0,KRW,excluded (non-movable)
+2,doorframe,0.2067,0,0.00,0,0,KRW,excluded (non-movable)
+3,door,0.3292,0,0.00,0,0,KRW,excluded (non-movable)
+4,doorframe,0.1685,0,0.00,0,0,KRW,excluded (non-movable)
+0,door,1.1851,0,0.00,0,0,KRW,excluded (non-movable)
+0,clothes,0.1601,15000,1.00,0,2402,KRW,rate from 'default'
+0,book,0.0371,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,bookshelf,0.7540,36000,1.10,40000,40000,KRW,
+2,book,0.3814,15000,1.00,0,5721,KRW,rate from 'default'
+3,book,0.0468,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,book,0.0199,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,book,0.2888,15000,1.00,0,4331,KRW,rate from 'default'
+0,shelf,0.8841,32000,1.05,30000,30000,KRW,
+1,object,0.0071,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,book,0.0306,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,book,0.0419,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,book,0.0852,15000,1.00,0,1278,KRW,rate from 'default'
+3,book,0.0721,15000,1.00,0,1081,KRW,rate from 'default'
+4,bookshelf,0.8295,36000,1.10,40000,40000,KRW,
+5,book,0.0110,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+6,book,0.0722,15000,1.00,0,1083,KRW,rate from 'default'
+0,door,0.0609,0,0.00,0,0,KRW,excluded (non-movable)
+1,window,0.1745,0,0.00,0,0,KRW,excluded (non-movable)
+2,box,0.0288,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+0,bookshelf,0.8656,36000,1.10,40000,40000,KRW,
+1,doorframe,0.2183,0,0.00,0,0,KRW,excluded (non-movable)
+2,book,0.0260,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,book,0.0205,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,door,0.2061,0,0.00,0,0,KRW,excluded (non-movable)
+0,shelf,0.9787,32000,1.05,30000,32884,KRW,
+1,door,0.4316,0,0.00,0,0,KRW,excluded (non-movable)
+2,door,0.0318,0,0.00,0,0,KRW,excluded (non-movable)
+0,book,0.0173,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,book,0.0216,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+2,book,0.0429,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+3,book,0.0126,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,bookshelf,0.9645,36000,1.10,40000,40000,KRW,
+5,book,0.0173,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+6,book,0.0752,15000,1.00,0,1128,KRW,rate from 'default'
+7,bookshelf,0.1158,36000,1.10,40000,40000,KRW,
+8,book,0.0185,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+9,book,0.0795,15000,1.00,0,1192,KRW,rate from 'default'
+10,book,0.0798,15000,1.00,0,1197,KRW,rate from 'default'
+11,book,0.1247,15000,1.00,0,1870,KRW,rate from 'default'
+0,book,0.0393,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+1,book,0.2030,15000,1.00,0,3045,KRW,rate from 'default'
+2,bookshelf,1.0476,36000,1.10,40000,41484,KRW,
+3,book,0.0119,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+4,book,0.0393,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+5,book,0.0039,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+6,book,0.1647,15000,1.00,0,2470,KRW,rate from 'default'
+7,book,0.0192,0,0.00,0,0,KRW,skipped (< 0.05 m^3)
+
+,total_volume_m3,97.0254,,,,,,non-movable items excluded
+,items_subtotal,,,,,4412704,KRW,
+,base_labor_fee,,,,,0,KRW,
+,pre_vat,,,,,4412704,KRW,
+,VAT,,,,,441270,KRW,
+,TOTAL,,,,,4853974,KRW,

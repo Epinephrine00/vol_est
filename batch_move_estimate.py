@@ -97,6 +97,34 @@ def _case_optional_json(
     return _load_json_object(_resolve_path(raw_path, base_dir))
 
 
+def _summarize_result(result: dict[str, Any]) -> dict[str, Any]:
+    quote = result.get("quote") if isinstance(result.get("quote"), dict) else {}
+    vlm = result.get("vlm") if isinstance(result.get("vlm"), dict) else {}
+    assist_data = (
+        result.get("assist_data") if isinstance(result.get("assist_data"), dict) else None
+    )
+    summary: dict[str, Any] = {
+        "title": result.get("title", ""),
+        "model_used": result.get("model_used", ""),
+        "volume_m3": quote.get("volume_m3"),
+        "total_ex_tax": quote.get("total_ex_tax"),
+        "currency": quote.get("currency"),
+        "quote": quote,
+        "lines": result.get("lines", []),
+        "vlm_summary_ko": vlm.get("summary_ko", ""),
+        "photo_items": vlm.get("from_photos", []),
+    }
+    if isinstance(result.get("integration"), dict):
+        summary["integration"] = result["integration"]
+    if assist_data:
+        summary["assist_data"] = {
+            "summary_quote": assist_data.get("summary_quote"),
+            "quote_filter": assist_data.get("quote_filter"),
+            "visualization": assist_data.get("visualization"),
+        }
+    return summary
+
+
 def _run_case(case: dict[str, Any], line_no: int, base_dir: Path, model: str) -> dict[str, Any]:
     case_id = str(case.get("case_id") or f"line_{line_no}")
     try:
@@ -127,7 +155,7 @@ def _run_case(case: dict[str, Any], line_no: int, base_dir: Path, model: str) ->
         return {
             "case_id": case_id,
             "ok": True,
-            "result": result,
+            "result": _summarize_result(result),
         }
     except MoveEstimateError as e:
         return {

@@ -218,11 +218,12 @@ python batch_move_estimate.py --input cases.jsonl --output results.jsonl --model
 ## 5. 결과 파일 형식
 
 출력도 JSONL입니다. 입력 한 줄당 결과 한 줄이 생성됩니다.
+배치 결과는 평가용 요약만 저장하므로 웹 UI용 이미지 미리보기인 `previews_base64`는 포함하지 않습니다.
 
 성공 예:
 
 ```json
-{"case_id":"manual_only_001","ok":true,"result":{"title":"이사 견적(초안)","lines":[...],"quote":{"volume_m3":0.56,"total_ex_tax":138480}}}
+{"case_id":"manual_only_001","ok":true,"result":{"volume_m3":0.56,"total_ex_tax":138480,"currency":"KRW","lines":[...],"quote":{"volume_m3":0.56,"total_ex_tax":138480}}}
 ```
 
 실패 예:
@@ -234,11 +235,14 @@ python batch_move_estimate.py --input cases.jsonl --output results.jsonl --model
 중요하게 볼 값:
 
 - `ok`: 케이스 성공 여부
+- `result.volume_m3`: 계산된 총 부피
+- `result.total_ex_tax`: 계산된 세전 견적 금액
+- `result.currency`: 통화
 - `result.lines`: 최종 품목 목록
-- `result.vlm.from_photos`: 사진에서 VLM이 추출한 품목
+- `result.photo_items`: 사진에서 VLM이 추출한 품목
+- `result.vlm_summary_ko`: VLM 요약 문장
 - `result.assist_data.quote_filter`: CSV 보조 데이터 모드에서 후보 품목 필터링 결과
-- `result.quote.volume_m3`: 계산된 총 부피
-- `result.quote.total_ex_tax`: 계산된 세전 견적 금액
+- `result.quote`: 요금 계산 상세
 - `error`: 실패한 경우 원인
 
 ## 6. 실제 평가를 위해 권장하는 폴더 구조

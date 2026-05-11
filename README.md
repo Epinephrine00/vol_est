@@ -82,9 +82,10 @@ python batch_move_estimate.py --input cases.jsonl --output results.jsonl
 상대 경로는 `cases.jsonl` 파일 위치 기준으로 해석됩니다.
 
 출력도 JSONL이며, 각 줄은 다음 형태입니다.
+배치 결과에는 평가에 필요한 요약만 저장하며, 이미지 base64 미리보기는 포함하지 않습니다.
 
 ```json
-{"case_id":"living_room_001","ok":true,"result":{}}
+{"case_id":"living_room_001","ok":true,"result":{"volume_m3":1.23,"total_ex_tax":160590,"currency":"KRW","lines":[]}}
 ```
 
 실패한 케이스는 `ok:false`와 `error`를 포함합니다.
